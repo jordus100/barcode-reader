@@ -31,8 +31,7 @@ PARITY_PATTERNS = {
 }
 
 
-def get_scanlines(image_path):
-    img = cv2.imread(image_path)
+def get_scanlines(img):
     height, width = img.shape[:2]
     if height < 10 or width < 10:
         raise Exception("Zbyt mały obraz")
@@ -40,20 +39,14 @@ def get_scanlines(image_path):
     lines = []
     for i in range(10, 255, 20):
         _, binary = cv2.threshold(gray, i, 255, cv2.THRESH_BINARY_INV)
-        # display binary
-        # dilation to make the lines thicker
-        kernel = np.ones((2, 2), np.uint8)
-        dilated = cv2.erode(binary, kernel, iterations=1)
+        # # dilation to make the lines thicker
+        # kernel = np.ones((2, 2), np.uint8)
+        # dilated = cv2.erode(binary, kernel, iterations=1)
         for j in range(0, height, height // 5):
-            scanline = [1 if dilated[j, x] == 255 else 0 for x in range(width)]
-            print(scanline)
-            lines.append(scanline)
             scanline = [1 if binary[j, x] == 255 else 0 for x in range(width)]
             lines.append(scanline)
         for j in range(0, height, height // 5):
-            scanline = [1 if dilated[j, x] == 255 else 0 for x in range(width)]
-            lines.append(scanline)
-            scanline = [1 if binary[j, x] == 255 else 0 for x in range(width)]
+            scanline = [1 if binary[j, x] == 255 else 0 for x in reversed(range(width))]
             lines.append(scanline)
     return lines
 
@@ -143,19 +136,18 @@ def decode_ean13(code):
     return first_digit + ''.join(left_digits + right_digits)
 
 
-def read_barcode(img_path):
+def read_barcode(img):
+    # img is an opencv2 image
     results = []
     try:
-        scanlines = get_scanlines(img_path)
+        scanlines = get_scanlines(img)
     except Exception as e:
         print(f"Błąd: {e}")
         return None
     for scanline in scanlines:
         try:
             bit_width, start_pos = determine_bit_width(scanline)
-            print("bit_width", bit_width)
             code = read_bits(scanline, bit_width, start_pos)
-            print("code", code)
             results.append(decode_ean13(code))
         except Exception as e:
             print(f"Błąd: {e}")

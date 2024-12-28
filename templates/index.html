@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="upload-section">
+    <form action="/" method="post" enctype="multipart/form-data">
+        <label for="file-upload" class="file-label">Załącz zdjęcie</label>
+        <input type="file" id="file-upload" name="file" accept="image/*" required>
+        <button type="submit">Sprawdź</button>
+    </form>
+    {% if barcode %}
+    <div class="result">
+        <h2>Wykryty kod kreskowy:</h2>
+        <p>{{ barcode }}</p>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}
